@@ -1,0 +1,13 @@
+create extension if not exists pgcrypto;
+create table if not exists projects(id uuid primary key default gen_random_uuid(),name text not null,created_at timestamptz not null default now());
+create table if not exists pages(id uuid primary key default gen_random_uuid(),project_id uuid not null references projects(id) on delete cascade,title text not null default '新頁面',created_at timestamptz default now());
+create table if not exists sections(id uuid primary key default gen_random_uuid(),project_id uuid not null references projects(id) on delete cascade,page_id uuid not null references pages(id) on delete cascade,name text not null default '新分類',sort_order int not null default 0);
+create table if not exists project_rows(id uuid primary key default gen_random_uuid(),project_id uuid not null references projects(id) on delete cascade,section_id uuid not null references sections(id) on delete cascade,item text not null default '新事項',owner text not null default '',progress text not null default '',status text not null default '待確認',start_date date,due_date date,sort_order int not null default 0);
+create table if not exists files(id uuid primary key default gen_random_uuid(),project_id uuid not null references projects(id) on delete cascade,row_id uuid not null references project_rows(id) on delete cascade,name text not null,size bigint not null default 0,mime_type text not null default 'application/octet-stream',storage_path text not null default '',created_at timestamptz not null default now());
+create table if not exists share_links(id uuid primary key default gen_random_uuid(),project_id uuid not null references projects(id) on delete cascade,token text not null unique,permission text not null default 'edit',created_at timestamptz not null default now());
+alter table files add column if not exists kind text not null default 'file';
+alter table files add column if not exists external_url text;
+insert into storage.buckets(id,name,public,file_size_limit) values('project-files','project-files',false,104857600) on conflict(id) do update set file_size_limit=104857600;
+grant usage on schema public to service_role;
+grant all privileges on all tables in schema public to service_role;
+grant all privileges on all sequences in schema public to service_role;
