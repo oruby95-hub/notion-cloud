@@ -1,0 +1,3 @@
+import {NextResponse} from"next/server";import { getSupabase } from "@/lib/supabase";
+export async function GET(){ const supabase = getSupabase();const{data,error}=await supabase.from("projects").select("id,name,created_at").order("created_at");if(error)return NextResponse.json({error:error.message},{status:500});return NextResponse.json(data||[])}
+export async function POST(req:Request){ const supabase = getSupabase();const b=await req.json(),name=String(b.name||"").trim();if(!name)return NextResponse.json({error:"名稱不能空白"},{status:400});const{data,error}=await supabase.from("projects").insert({name}).select().single();if(error)return NextResponse.json({error:error.message},{status:500});return NextResponse.json(data)}
