@@ -1,0 +1,2 @@
+import {NextResponse} from 'next/server';import {getSupabase} from '@/lib/supabase';
+export async function POST(req:Request,{params}:{params:Promise<{projectId:string}>}){try{const {projectId}=await params;const s=getSupabase();const token=crypto.randomUUID().replaceAll('-','');const {data,error}=await s.from('share_links').insert({project_id:projectId,token,permission:'edit'}).select().single();if(error)throw error;return NextResponse.json({token,url:`${new URL(req.url).origin}/share/${data.token}`})}catch(e:any){return NextResponse.json({error:e.message},{status:500})}}
